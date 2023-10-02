@@ -5,18 +5,18 @@
 #include <chrono>
 #include <thread>
 #include <mutex>
-#include <clocale>
 
 using namespace std;
 
-//Функция поиска максимального элемента
-int findMax(int count, vector<int> v)
+//Func for search max element
+int findMax(vector<int> v, int test_num, int th_count)
 {
 	int max_elem = 0;
-	vector<int> thread_max(count);
+	vector<int> thread_max(th_count);
 	vector<thread> threads;
-	int step = v.size() / count;
-	for (int i = 0; i < count; i++)
+	int step = v.size() / th_count;
+	chrono::high_resolution_clock::time_point t_start = chrono::high_resolution_clock::now();
+	for (int i = 0; i < th_count; i++)
 	{
 		thread th([i, step, &v, &thread_max]
 		{
@@ -30,28 +30,23 @@ int findMax(int count, vector<int> v)
 		if (tt.joinable())
 			tt.join();
 	}
-	cout << "Максимальные для каждого потока: ";
+	max_elem = *(max_element(thread_max.begin(), thread_max.end()));
+	chrono::high_resolution_clock::time_point t_end = chrono::high_resolution_clock::now();
+	chrono::duration<double, milli> t_diff = t_end - t_start;
+	cout << "Test " << test_num << endl;
+	cout << "Max elems in each threads: ";
 	for (auto& t : thread_max)
 	{
 		cout << t << " ";
 	}
-	max_elem = *(max_element(thread_max.begin(), thread_max.end()));
-	cout << "\nCамый большой: " << max_elem << endl;
+	cout << "\nMax Maximus Maximilian: " << max_elem << endl;
+	cout << "Time for " << th_count << " thread(s), mc: " << t_diff.count() << "\n\n";
 	return max_elem;
 }
 
-void test(vector<int>& v, int test_num, int threads_num) {
-	cout << "Тест " << test_num << endl;
-	chrono::high_resolution_clock::time_point t_start = chrono::high_resolution_clock::now();
-	findMax(threads_num, v);
-	chrono::high_resolution_clock::time_point t_end = chrono::high_resolution_clock::now();
-	chrono::duration<double, milli> t_diff = t_end - t_start;
-	std::cout << "Время для " << test_num << "-х потоков, мс: " << t_diff.count() << endl;
-}
 
 int main()
 {
-	setlocale(LC_ALL, "");
 	random_device rd;
 	mt19937 gen(rd());
 	int min = 0;
@@ -63,10 +58,10 @@ int main()
 		return range(gen);
 	});
 
-	test(v, 1, 1);
-	test(v, 2, 2);
-	test(v, 3, 4);
-	test(v, 4, 8);
+	findMax(v, 1, 1);
+	findMax(v, 2, 2);
+	findMax(v, 3, 4);
+	findMax(v, 4, 8);
 
 	return 0;
 }
